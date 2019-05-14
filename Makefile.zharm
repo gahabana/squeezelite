@@ -1,0 +1,4 @@
+#options left out: -DIR -DLINKALL -DRESAMPLE_MP -DVISEXPORT -DFFMPEG 
+OPTS = -DLINKALL -DRESAMPLE_MP -DDSD -DLINUX -DALSA -DEVENTFD -O3 -march=native -mtune=native
+
+include Makefile

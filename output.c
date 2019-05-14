@@ -138,11 +138,11 @@ frames_t _output_frames(frames_t avail) {
 				if (delay) {
 					output.state = OUTPUT_PAUSE_FRAMES;
 					if (!output.delay_active) {
-						output.pause_frames = output.current_sample_rate * delay / 2000;
+						output.pause_frames = output.current_sample_rate * delay / 1000 * 5.0/100; //gahabana changed 5% of Pause in the old samplerate
 						output.delay_active = true;  // first delay - don't process track start
 						break;
 					} else {
-						output.pause_frames = output.next_sample_rate * delay / 2000;
+						output.pause_frames = output.next_sample_rate * delay / 1000 * 95.0/100; //gahabana changed 95% of Pause in the new samplerate
 						output.delay_active = false; // second delay - process track start
 					}
 				}

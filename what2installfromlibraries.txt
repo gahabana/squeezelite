@@ -1,0 +1,1 @@
+sudo apt-get install libmad0-dev libfaad-dev libflac-dev libmpg123-dev liblircclient-dev libsoxr-dev libavformat-dev  libasound2-dev  libvorbis-dev
