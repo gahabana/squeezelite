@@ -114,12 +114,20 @@ void send_packet(u8_t *packet, size_t len) {
 }
 
 static void sendHELO(bool reconnect, const char *fixed_cap, const char *var_cap, u8_t mac[6]) {
-	const char *base_cap = 
-#if USE_SSL
-	"CanHTTPS=1,"
-#endif	
-	"Model=squeezelite,AccuratePlayPoints=1,HasDigitalOut=1,HasPolarityInversion=1,Firmware=" VERSION;
+	#define BASE_CAP "Model=squeezelite,AccuratePlayPoints=1,HasDigitalOut=1,HasPolarityInversion=1,Firmware=" VERSION
+	#define SSL_CAP "CanHTTPS=1"
+	const char *base_cap;
 	struct HELO_packet pkt;
+	
+#if USE_SSL
+#if !LINKALL && !NO_SSLSYM
+	if (ssl_loaded) base_cap = SSL_CAP "," BASE_CAP;
+	else base_cap = BASE_CAP;
+#endif	
+	base_cap = SSL_CAP "," BASE_CAP;
+#else
+	base_cap = BASE_CAP;
+#endif	
 
 	memset(&pkt, 0, sizeof(pkt));
 	memcpy(&pkt.opcode, "HELO", 4);
@@ -148,9 +156,7 @@ static void sendSTAT(const char *event, u32_t server_timestamp) {
 
 	if (status.current_sample_rate && status.frames_played && status.frames_played > status.device_frames) {
 		ms_played = (u32_t)(((u64_t)(status.frames_played - status.device_frames) * (u64_t)1000) / (u64_t)status.current_sample_rate);
-#ifndef STATUSHACK
 		if (now > status.updated) ms_played += (now - status.updated);
-#endif
 		LOG_SDEBUG("ms_played: %u (frames_played: %u device_frames: %u)", ms_played, status.frames_played, status.device_frames);
 	} else if (status.frames_played && now > status.stream_start) {
 		ms_played = now - status.stream_start;
@@ -320,9 +326,6 @@ static void process_strm(u8_t *pkt, int len) {
 			LOCK_O;
 			output.state = jiffies ? OUTPUT_START_AT : OUTPUT_RUNNING;
 			output.start_at = jiffies;
-#ifdef STATUSHACK
-			status.frames_played = output.frames_played;
-#endif
 			UNLOCK_O;
 
 			LOG_DEBUG("unpause at: %u now: %u", jiffies, gettime_ms());
@@ -688,9 +691,6 @@ static void slimproto_run() {
 				_sendSTMs = true;
 				output.track_started = false;
 				status.stream_start = output.track_start_time;
-#ifdef STATUSHACK 
-				status.frames_played = output.frames_played;
-#endif
 			}
 #if PORTAUDIO
 			if (output.pa_reopen) {

@@ -205,11 +205,11 @@ static void usage(const char *argv0) {
 #if USE_SSL
                    " SSL"
 #endif
+#if NO_SSLSYM
+                   " NO_SSLSYM"
+#endif
 #if LINKALL
 		   " LINKALL"
-#endif
-#if STATUSHACK
-		   " STATUSHACK"
 #endif
 		   "\n\n",
 		   argv0);
@@ -689,6 +689,10 @@ int main(int argc, char **argv) {
 	signal(SIGHUP, sighandler);
 #endif
 
+#if USE_SSL && !LINKALL && !NO_SSLSYM
+	ssl_loaded = load_ssl_symbols();
+#endif
+
 	// set the output buffer size if not specified on the command line, take account of resampling
 	if (!output_buf_size) {
 		output_buf_size = OUTPUTBUF_SIZE;
@@ -811,6 +815,10 @@ int main(int argc, char **argv) {
 		free(pidfile);
 	}
 #endif
+
+#if USE_SSL && !LINKALL && !NO_SSLSYM
+	free_ssl_symbols();
+#endif	
 
 	exit(0);
 }
